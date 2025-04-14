@@ -1,6 +1,6 @@
 import React from "react";
 import { TodoForm } from "../components/TodoForm";
-import { TodoList } from "../components/TodoList";
+import { TodoContainer } from "../components/TodoContainer";
 
 export const TodoPage: React.FC = () => {
   return (
@@ -14,7 +14,7 @@ export const TodoPage: React.FC = () => {
 
       <TodoForm />
 
-      <TodoList
+      <TodoContainer
         instanceId="title-sorted"
         title="Title Sorted Todos"
         initialSortField="title"

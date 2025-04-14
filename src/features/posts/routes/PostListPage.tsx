@@ -1,5 +1,5 @@
 import React from "react";
-import { PostList } from "../components/PostList";
+import { PostContainer } from "../components/PostContainer";
 
 export const PostListPage: React.FC = () => {
   return (
@@ -10,7 +10,7 @@ export const PostListPage: React.FC = () => {
       </header>
 
       <div className="grid grid-cols-1 gap-8">
-        <PostList
+        <PostContainer
           instanceId="main-posts"
           title="All Posts"
           initialSortField="createdAt"

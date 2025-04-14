@@ -1,80 +1,37 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { usePagination } from "../../../lib/use-pagination";
-import { SortParams } from "../../../lib/schema";
-import { usePostList } from "../hooks";
 import { PostItem } from "./PostItem";
+import { PostFilters } from "../types";
+import { PaginatedResponse } from "../../../lib/schema";
+import { Post } from "../types";
 
 interface PostListProps {
-  instanceId: string;
-  title?: string;
-  initialSortField?: string;
-  initialSortOrder?: "asc" | "desc";
-  initialLimit?: number;
-  initialShowPublished?: boolean | undefined;
+  title: string;
+  data: PaginatedResponse<Post> | undefined;
+  isLoading: boolean;
+  error: unknown;
+  filters: PostFilters | undefined;
+  page: number;
+  currentSortValue: string;
+  currentFilterValue: string;
+  onFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  onSortChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  onPageChange: (newPage: number) => void;
 }
 
 export const PostList: React.FC<PostListProps> = ({
-  instanceId,
-  title = "Posts",
-  initialSortField = "createdAt",
-  initialSortOrder = "desc",
-  initialLimit = 5,
-  initialShowPublished,
+  title,
+  data,
+  isLoading,
+  error,
+  filters,
+  page,
+  currentSortValue,
+  currentFilterValue,
+  onFilterChange,
+  onSortChange,
+  onPageChange,
 }) => {
-  // Use the pagination hook for state management
-  const { pagination, filters, sort, goToPage, updateFilters, updateSort } =
-    usePagination({
-      initialPage: 1,
-      initialLimit,
-      initialFilters:
-        initialShowPublished !== undefined
-          ? { published: initialShowPublished }
-          : undefined,
-      initialSort: {
-        field: initialSortField,
-        order: initialSortOrder,
-      } as SortParams,
-    });
-
-  // Fetch posts using our specialized hook
-  const { data, isLoading, error } = usePostList(
-    pagination.page,
-    pagination.limit,
-    filters,
-    sort,
-    instanceId
-  );
-
-  // Handle filter change
-  const handleFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = event.target.value;
-    if (value === "all") {
-      updateFilters(undefined);
-    } else {
-      updateFilters({ published: value === "published" });
-    }
-  };
-
-  // Handle sort change
-  const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const [field, order] = event.target.value.split(":");
-    updateSort({
-      field,
-      order: order as "asc" | "desc",
-    });
-  };
-
-  // Calculate current filter and sort values for select dropdowns
-  const currentFilterValue =
-    filters?.published !== undefined
-      ? filters.published
-        ? "published"
-        : "drafts"
-      : "all";
-
-  const currentSortValue = `${sort?.field}:${sort?.order}`;
-
   // Loading state
   if (isLoading) {
     return <div className="text-center py-4">Loading posts...</div>;
@@ -104,7 +61,7 @@ export const PostList: React.FC<PostListProps> = ({
         <div>
           <select
             className="p-2 border rounded"
-            onChange={handleFilterChange}
+            onChange={onFilterChange}
             value={currentFilterValue}
           >
             <option value="all">All Posts</option>
@@ -116,7 +73,7 @@ export const PostList: React.FC<PostListProps> = ({
         <div>
           <select
             className="p-2 border rounded"
-            onChange={handleSortChange}
+            onChange={onSortChange}
             value={currentSortValue}
           >
             <option value="createdAt:desc">Newest First</option>
@@ -129,6 +86,9 @@ export const PostList: React.FC<PostListProps> = ({
         {data && (
           <div className="ml-auto text-sm text-gray-500">
             Showing {data.data.length} of {data.meta.total} posts
+            {filters?.published !== undefined && (
+              <span> ({filters.published ? "published" : "drafts"})</span>
+            )}
           </div>
         )}
       </div>
@@ -152,22 +112,20 @@ export const PostList: React.FC<PostListProps> = ({
       {data && data.meta.totalPages > 1 && (
         <div className="flex justify-center gap-2">
           <button
-            onClick={() => goToPage(pagination.page - 1)}
-            disabled={pagination.page === 1}
+            onClick={() => onPageChange(page - 1)}
+            disabled={page === 1}
             className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
           >
             Previous
           </button>
 
           <span className="py-1 px-2">
-            Page {pagination.page} of {data.meta.totalPages}
+            Page {page} of {data.meta.totalPages}
           </span>
 
           <button
-            onClick={() =>
-              goToPage(Math.min(data.meta.totalPages, pagination.page + 1))
-            }
-            disabled={pagination.page >= data.meta.totalPages}
+            onClick={() => onPageChange(Math.min(data.meta.totalPages, page + 1))}
+            disabled={page >= data.meta.totalPages}
             className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
           >
             Next
